@@ -1,0 +1,8 @@
+.arts/
+.vscode/
+.cache/
+*.macrocall
+tmpFile*
+*.gcno
+*.gcda
+target/
