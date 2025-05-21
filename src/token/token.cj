@@ -1,5 +1,8 @@
 package thunderlang.token
 
+import std.deriving.Derive
+
+@Derive[Equatable]
 public enum TokenType {
     | ILLEGAL
     | EOF
@@ -28,8 +31,8 @@ public enum TokenType {
 
 public struct Token {
     public Token(
-        private let `type`: TokenType,
-        private let literal: String
+        public let `type`: TokenType,
+        public let literal: String
     ) {
     }
 }

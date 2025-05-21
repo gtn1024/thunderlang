@@ -39,7 +39,7 @@ public class Lexer {
             case r'}' => newToken(TokenType.RBRACE, this.ch)
             case r',' => newToken(TokenType.COMMA, this.ch)
             case r'+' => newToken(TokenType.PLUS, this.ch)
-            case r'\0' => newToken(TokenType.EOF, r'\0')
+            case r'\0' => Token(TokenType.EOF, "")
             case _ => throw IllegalArgumentException("Illegal character: ${this.ch}")
         }
         this.readRune()
