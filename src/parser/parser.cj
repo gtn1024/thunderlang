@@ -8,6 +8,7 @@ import std.collection.ArrayList
 public class Parser {
     private var curToken: Token = Token(TokenType.EOF, "")
     private var peekToken: Token = Token(TokenType.EOF, "")
+    private let errors: ArrayList<String> = ArrayList()
 
     public Parser(
         private let lexer: Lexer
@@ -19,6 +20,15 @@ public class Parser {
         p.nextToken()
         p.nextToken()
         p
+    }
+
+    public func getErrors(): Array<String> {
+        this.errors.toArray()
+    }
+
+    private func peekError(t: TokenType) {
+        let msg = "expected next token to be ${t}, got ${this.peekToken.`type`} instead"
+        this.errors.add(msg)
     }
 
     private func nextToken() {
@@ -78,6 +88,7 @@ public class Parser {
             this.nextToken()
             return true
         }
+        this.peekError(t)
         false
     }
 }

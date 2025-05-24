@@ -18,6 +18,7 @@ func testLetStatements() {
     let parser = Parser.create(lexer)
 
     let program = parser.parseProgram()
+    checkParserErrors(parser)
     @Expect(program.statements.size, 3)
 
     let tests = [
@@ -39,4 +40,17 @@ func testLetStatement(s: Statement, name: String): Bool {
     @Expect(letStmt.name.tokenLiteral(), name)
 
     true
+}
+
+func checkParserErrors(p: Parser) {
+    let errors = p.getErrors()
+    if (errors.size == 0) {
+        return
+    }
+
+    println("parser has ${errors.size} errors:")
+    for (error in errors) {
+        println("parser error: ${error}")
+    }
+    @Expect(errors.size, 0)
 }
