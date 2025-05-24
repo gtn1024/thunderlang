@@ -1,0 +1,42 @@
+package thunderlang.parser
+
+import std.unittest.*
+import std.unittest.testmacro.*
+import thunderlang.token.{TokenType}
+import thunderlang.lexer.Lexer
+import thunderlang.ast.{Program, Statement, LetStatement}
+
+@Test
+func testLetStatements() {
+    let input = """
+    let x = 5;
+    let y = 10;
+    let foobar = 838383;
+    """
+
+    let lexer = Lexer.create(input)
+    let parser = Parser.create(lexer)
+
+    let program = parser.parseProgram()
+    @Expect(program.statements.size, 3)
+
+    let tests = [
+        "x",
+        "y",
+        "foobar"
+    ]
+    for (i in 0..tests.size) {
+        let tt = tests[i]
+        let stmt = program.statements[i]
+        @Expect(testLetStatement(stmt, tt), true)
+    }
+}
+
+func testLetStatement(s: Statement, name: String): Bool {
+    let letStmt = (s as LetStatement).getOrThrow {=> IllegalStateException("s is not LetStatement")}
+    @Expect(letStmt.tokenLiteral(), "let")
+    @Expect(letStmt.name.value, name)
+    @Expect(letStmt.name.tokenLiteral(), name)
+
+    true
+}

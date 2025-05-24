@@ -2,7 +2,7 @@
 
 [package]
   cjc-version = "0.60.5"
-  compile-option = "--debug-macro --static --static-std --static-libs -O2"
+  compile-option = ""
   description = "nothing here"
   link-option = ""
   name = "thunderlang"
@@ -10,4 +10,4 @@
   src-dir = ""
   target-dir = ""
   version = "1.0.0"
-  package-configuration = {}
+  [package.package-configuration]
