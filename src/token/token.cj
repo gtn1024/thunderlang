@@ -3,7 +3,7 @@ package thunderlang.token
 import std.deriving.Derive
 import std.collection.HashMap
 
-@Derive[ToString, Equatable]
+@Derive[ToString, Equatable, Hashable]
 public enum TokenType {
     | ILLEGAL
     | EOF

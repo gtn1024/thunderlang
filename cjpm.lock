@@ -1,3 +1,4 @@
 version = 0
 
 [requires]
+  iota4cj = {git = "https://github.com/gtn1024/iota4cj.git", commitId = "fb44f1a3cf7435ec0356c65aa1f2fdc9d70cd850", tag = "1.0.0"}
