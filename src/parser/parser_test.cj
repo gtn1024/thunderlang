@@ -4,7 +4,7 @@ import std.unittest.*
 import std.unittest.testmacro.*
 import thunderlang.token.{TokenType}
 import thunderlang.lexer.Lexer
-import thunderlang.ast.{Program, Statement, LetStatement}
+import thunderlang.ast.{Program, Statement, LetStatement, ReturnStatement}
 
 @Test
 func testLetStatements() {
@@ -53,4 +53,29 @@ func checkParserErrors(p: Parser) {
         println("parser error: ${error}")
     }
     @Expect(errors.size, 0)
+}
+
+@Test
+func testReturnStatements() {
+    let input = """
+    return 5;
+    return 10;
+    return 993 322;
+    """
+
+    let lexer = Lexer.create(input)
+    let parser = Parser.create(lexer)
+
+    let program = parser.parseProgram()
+    checkParserErrors(parser)
+
+    @Expect(program.statements.size, 3)
+
+    for (stmt in program.statements) {
+        if (let Some(returnStmt) <- (stmt as ReturnStatement)) {
+            @Expect(returnStmt.tokenLiteral(), "return")
+        } else {
+            throw IllegalStateException("stmt is not ReturnStatement")
+        }
+    }
 }

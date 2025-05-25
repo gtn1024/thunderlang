@@ -2,7 +2,7 @@ package thunderlang.parser
 
 import thunderlang.lexer.Lexer
 import thunderlang.token.{Token, TokenType}
-import thunderlang.ast.{Program, Statement, Expression, LetStatement, Identifier}
+import thunderlang.ast.{Program, Statement, Expression, LetStatement, ReturnStatement, Identifier}
 import std.collection.ArrayList
 
 public class Parser {
@@ -51,6 +51,7 @@ public class Parser {
     private func parseStatement(): ?Statement {
         match (this.curToken.`type`) {
             case TokenType.LET => this.parseLetStatement()
+            case TokenType.RETURN => this.parseReturnStatement()
             case _ => None
         }
     }
@@ -66,6 +67,19 @@ public class Parser {
         if (!this.expectPeek(TokenType.ASSIGN)) {
             return None
         }
+
+        // TODO: 跳过对表达式的处理，直到遇见分号
+        while (!this.curTokenIs(TokenType.SEMICOLON)) {
+            this.nextToken()
+        }
+
+        stmt
+    }
+
+    private func parseReturnStatement(): Statement {
+        let stmt = ReturnStatement(this.curToken, None)
+
+        this.nextToken()
 
         // TODO: 跳过对表达式的处理，直到遇见分号
         while (!this.curTokenIs(TokenType.SEMICOLON)) {

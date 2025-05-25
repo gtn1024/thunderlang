@@ -42,6 +42,21 @@ public struct LetStatement <: Statement {
     }
 }
 
+public struct ReturnStatement <: Statement {
+    public ReturnStatement(
+        public let token: Token,
+        public let returnValue: ?Expression
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func statementNode(): Unit {
+    }
+}
+
 public struct Identifier <: Expression {
     public Identifier(
         public let token: Token,
