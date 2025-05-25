@@ -153,3 +153,30 @@ public struct IntegerLiteral <: Expression {
         this.token.literal
     }
 }
+
+public struct PrefixExpression <: Expression {
+    public PrefixExpression(
+        public let token: Token,
+        public let `operator`: String,
+        public let right: Expression
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func expressionNode(): Unit {
+    }
+
+    public func string(): String {
+        let sb = StringBuilder()
+
+        sb.append("(")
+        sb.append(this.`operator`)
+        sb.append(this.right.string())
+        sb.append(")")
+
+        sb.toString()
+    }
+}

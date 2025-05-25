@@ -32,6 +32,9 @@ public class Parser {
     ) {
         this.registerPrefix(TokenType.IDENT, this.parseIdentifier)
         this.registerPrefix(TokenType.INT, this.parseIntegerLiteral)
+
+        this.registerPrefix(TokenType.BANG, this.parsePrefixExpression)
+        this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression)
     }
 
     public static func create(lexer: Lexer): Parser {
@@ -118,6 +121,18 @@ public class Parser {
             return lit
         }
         let msg = "could not parse ${this.curToken.literal} as integer"
+        this.errors.add(msg)
+        None
+    }
+
+    private func parsePrefixExpression(): ?Expression {
+        let curToken = this.curToken
+        this.nextToken()
+        if (let Some(right) <- this.parseExpression(PREFIX)) {
+            let expression = PrefixExpression(curToken, curToken.literal, right)
+            return expression
+        }
+        let msg = "could not parse prefix expression with token ${curToken.literal}"
         this.errors.add(msg)
         None
     }

@@ -116,3 +116,33 @@ func testIntegerLiteralExpression() {
     @Expect(intLit.value, 5)
     @Expect(intLit.tokenLiteral(), "5")
 }
+
+@Test
+func testParsingPrefixExpressions() {
+    let prefixTests = [
+        ("!5;", "!", 5),
+        ("-15;", "-", 15)
+    ]
+
+    for ((input, `operator`, value) in prefixTests) {
+        let lexer = Lexer.create(input)
+        let parser = Parser.create(lexer)
+        let program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        @Expect(program.statements.size, 1)
+
+        let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
+        let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
+
+        let prefixExpr = (expr as PrefixExpression).getOrThrow {=> IllegalStateException("exprStmt.expression is not PrefixExpression")}
+        @Expect(prefixExpr.`operator`, `operator`)
+        testIntegerLiteral(prefixExpr.right, value)
+    }
+}
+
+func testIntegerLiteral(il: Expression, value: Int64) {
+    let integ = (il as IntegerLiteral).getOrThrow {=> IllegalStateException("il is not IntegerLiteral")}
+    @Expect(integ.value, value)
+    @Expect(integ.tokenLiteral(), value.toString())
+}
