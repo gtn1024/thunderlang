@@ -4,6 +4,7 @@ import thunderlang.token.Token
 
 public interface Node {
     func tokenLiteral(): String
+    func string(): String
 }
 
 public interface Statement <: Node {
@@ -24,6 +25,16 @@ public struct Program <: Node {
         }
         ""
     }
+
+    public func string(): String {
+        let sb = StringBuilder()
+
+        for (s in this.statements) {
+            sb.append(s.string())
+        }
+
+        sb.toString()
+    }
 }
 
 public struct LetStatement <: Statement {
@@ -40,6 +51,20 @@ public struct LetStatement <: Statement {
 
     public func statementNode(): Unit {
     }
+
+    public func string(): String {
+        let sb = StringBuilder()
+
+        sb.append(this.tokenLiteral() + " ")
+        sb.append(this.name.string())
+        sb.append(" = ")
+        if (let Some(val) <- this.value) {
+            sb.append(val.string())
+        }
+        sb.append(";")
+
+        sb.toString()
+    }
 }
 
 public struct ReturnStatement <: Statement {
@@ -55,6 +80,18 @@ public struct ReturnStatement <: Statement {
 
     public func statementNode(): Unit {
     }
+
+    public func string(): String {
+        let sb = StringBuilder()
+
+        sb.append(this.tokenLiteral() + " ")
+        if (let Some(val) <- this.returnValue) {
+            sb.append(val.string())
+        }
+        sb.append(";")
+
+        sb.toString()
+    }
 }
 
 public struct Identifier <: Expression {
@@ -69,5 +106,31 @@ public struct Identifier <: Expression {
     }
 
     public func expressionNode(): Unit {
+    }
+
+    public func string(): String {
+        this.value
+    }
+}
+
+public struct ExpressionStatement <: Statement {
+    public ExpressionStatement(
+        public let token: Token,
+        public let expression: ?Expression
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func statementNode(): Unit {
+    }
+
+    public func string(): String {
+        if (let Some(expr) <- this.expression) {
+            return expr.string()
+        }
+        ""
     }
 }
