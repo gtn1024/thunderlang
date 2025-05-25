@@ -180,3 +180,34 @@ public struct PrefixExpression <: Expression {
         sb.toString()
     }
 }
+
+public struct InfixExpression <: Expression {
+    public InfixExpression(
+        public let token: Token,
+        public let left: Expression,
+        public let `operator`: String,
+        public let right: Expression
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func expressionNode(): Unit {
+    }
+
+    public func string(): String {
+        let sb = StringBuilder()
+
+        sb.append("(")
+        sb.append(this.left.string())
+        sb.append(" ")
+        sb.append(this.`operator`)
+        sb.append(" ")
+        sb.append(this.right.string())
+        sb.append(")")
+
+        sb.toString()
+    }
+}

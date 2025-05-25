@@ -146,3 +146,34 @@ func testIntegerLiteral(il: Expression, value: Int64) {
     @Expect(integ.value, value)
     @Expect(integ.tokenLiteral(), value.toString())
 }
+
+@Test
+func testParsingInfixExpressions() {
+    let infixTests = [
+        ("5 + 5;", 5, "+", 5),
+        ("5 - 5;", 5, "-", 5),
+        ("5 * 5;", 5, "*", 5),
+        ("5 / 5;", 5, "/", 5),
+        ("5 > 5;", 5, ">", 5),
+        ("5 < 5;", 5, "<", 5),
+        ("5 == 5;", 5, "==", 5),
+        ("5 != 5;", 5, "!=", 5)
+    ]
+
+    for ((input, leftValue, `operator`, rightValue) in infixTests) {
+        let lexer = Lexer.create(input)
+        let parser = Parser.create(lexer)
+        let program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        @Expect(program.statements.size, 1)
+
+        let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
+        let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
+
+        let infixExpr = (expr as InfixExpression).getOrThrow {=> IllegalStateException("exprStmt.expression is not InfixExpression")}
+        testIntegerLiteral(infixExpr.left, leftValue)
+        @Expect(infixExpr.`operator`, `operator`)
+        testIntegerLiteral(infixExpr.right, rightValue)
+    }
+}

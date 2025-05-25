@@ -20,6 +20,17 @@ import iota4cj.macros.*
 type prefixParseFn = () -> ?Expression
 type infixParseFn = (Expression) -> ?Expression
 
+let precedences = HashMap([
+    (TokenType.EQ, EQUALS),
+    (TokenType.NOT_EQ, EQUALS),
+    (TokenType.LT, LESSGREATER),
+    (TokenType.GT, LESSGREATER),
+    (TokenType.PLUS, SUM),
+    (TokenType.MINUS, SUM),
+    (TokenType.SLASH, PRODUCT),
+    (TokenType.ASTERISK, PRODUCT)
+])
+
 public class Parser {
     private var curToken: Token = Token(TokenType.EOF, "")
     private var peekToken: Token = Token(TokenType.EOF, "")
@@ -35,6 +46,29 @@ public class Parser {
 
         this.registerPrefix(TokenType.BANG, this.parsePrefixExpression)
         this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression)
+
+        this.registerInfix(TokenType.PLUS, this.parseInfixExpression)
+        this.registerInfix(TokenType.MINUS, this.parseInfixExpression)
+        this.registerInfix(TokenType.SLASH, this.parseInfixExpression)
+        this.registerInfix(TokenType.ASTERISK, this.parseInfixExpression)
+        this.registerInfix(TokenType.EQ, this.parseInfixExpression)
+        this.registerInfix(TokenType.NOT_EQ, this.parseInfixExpression)
+        this.registerInfix(TokenType.LT, this.parseInfixExpression)
+        this.registerInfix(TokenType.GT, this.parseInfixExpression)
+    }
+
+    private func peekPrecedence(): Int64 {
+        if (let Some(precedence) <- precedences.get(this.peekToken.`type`)) {
+            return precedence
+        }
+        LOWEST
+    }
+
+    private func curPrecedence(): Int64 {
+        if (let Some(precedence) <- precedences.get(this.curToken.`type`)) {
+            return precedence
+        }
+        LOWEST
     }
 
     public static func create(lexer: Lexer): Parser {
@@ -99,7 +133,17 @@ public class Parser {
     private func parseExpression(precedence: Int64): ?Expression {
         let prefix = this.prefixParseFns.get(this.curToken.`type`)
         if (let Some(fn) <- prefix) {
-            let leftExp = fn()
+            var leftExp = fn()
+            while (!this.peekTokenIs(TokenType.SEMICOLON) && precedence < this.peekPrecedence()) {
+                if (let Some(infix) <- this.infixParseFns.get(this.peekToken.`type`) &&
+                    let Some(lftExp) <- leftExp) {
+                    this.nextToken()
+                    leftExp = infix(lftExp)
+                } else {
+                    return leftExp
+                }
+            }
+
             return leftExp
         }
         this.noPrefixParseFnError(this.curToken.`type`)
@@ -133,6 +177,22 @@ public class Parser {
             return expression
         }
         let msg = "could not parse prefix expression with token ${curToken.literal}"
+        this.errors.add(msg)
+        None
+    }
+
+    private func parseInfixExpression(left: Expression): ?Expression {
+        let curToken = this.curToken
+        let precedence = this.curPrecedence()
+        this.nextToken()
+        if (let Some(right) <- this.parseExpression(precedence)) {
+            let expression = InfixExpression(
+                curToken, left, curToken.literal,
+                right,
+            )
+            return expression
+        }
+        let msg = "could not parse infix expression with token ${curToken.literal}"
         this.errors.add(msg)
         None
     }
