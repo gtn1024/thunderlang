@@ -2,8 +2,9 @@ package thunderlang.parser
 
 import thunderlang.lexer.Lexer
 import thunderlang.token.{Token, TokenType}
-import thunderlang.ast.{Program, Statement, Expression, LetStatement, ReturnStatement, Identifier, ExpressionStatement}
+import thunderlang.ast.*
 import std.collection.{ArrayList, HashMap}
+import std.convert.Parsable
 import iota4cj.macros.*
 
 @iota[1](
@@ -16,8 +17,8 @@ import iota4cj.macros.*
     CALL        // myFunction(X)
 )
 
-type prefixParseFn = () -> Expression
-type infixParseFn = (Expression) -> Expression
+type prefixParseFn = () -> ?Expression
+type infixParseFn = (Expression) -> ?Expression
 
 public class Parser {
     private var curToken: Token = Token(TokenType.EOF, "")
@@ -30,6 +31,7 @@ public class Parser {
         private let lexer: Lexer
     ) {
         this.registerPrefix(TokenType.IDENT, this.parseIdentifier)
+        this.registerPrefix(TokenType.INT, this.parseIntegerLiteral)
     }
 
     public static func create(lexer: Lexer): Parser {
@@ -106,8 +108,18 @@ public class Parser {
         this.errors.add(msg)
     }
 
-    private func parseIdentifier(): Expression {
+    private func parseIdentifier(): ?Expression {
         Identifier(this.curToken, this.curToken.literal)
+    }
+
+    private func parseIntegerLiteral(): ?Expression {
+        if (let Some(value) <- Int64.tryParse(this.curToken.literal)) {
+            let lit = IntegerLiteral(this.curToken, value)
+            return lit
+        }
+        let msg = "could not parse ${this.curToken.literal} as integer"
+        this.errors.add(msg)
+        None
     }
 
     private func parseLetStatement(): ?Statement {

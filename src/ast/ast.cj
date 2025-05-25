@@ -134,3 +134,22 @@ public struct ExpressionStatement <: Statement {
         ""
     }
 }
+
+public struct IntegerLiteral <: Expression {
+    public IntegerLiteral(
+        public let token: Token,
+        public let value: Int64
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func expressionNode(): Unit {
+    }
+
+    public func string(): String {
+        this.token.literal
+    }
+}

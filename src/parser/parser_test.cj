@@ -4,7 +4,7 @@ import std.unittest.*
 import std.unittest.testmacro.*
 import thunderlang.token.{TokenType}
 import thunderlang.lexer.Lexer
-import thunderlang.ast.{Program, Statement, LetStatement, ReturnStatement, ExpressionStatement, Identifier}
+import thunderlang.ast.*
 
 @Test
 func testLetStatements() {
@@ -96,4 +96,23 @@ func testIdentifierExpression() {
     let ident = (expr as Identifier).getOrThrow {=> IllegalStateException("exprStmt.expression is not Identifier")}
     @Expect(ident.value, "foobar")
     @Expect(ident.tokenLiteral(), "foobar")
+}
+
+@Test
+func testIntegerLiteralExpression() {
+    let input = "5;"
+
+    let lexer = Lexer.create(input)
+    let parser = Parser.create(lexer)
+    let program = parser.parseProgram()
+    checkParserErrors(parser)
+
+    @Expect(program.statements.size, 1)
+
+    let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
+    let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
+
+    let intLit = (expr as IntegerLiteral).getOrThrow {=> IllegalStateException("exprStmt.expression is not IntegerLiteral")}
+    @Expect(intLit.value, 5)
+    @Expect(intLit.tokenLiteral(), "5")
 }
