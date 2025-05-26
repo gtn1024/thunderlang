@@ -177,3 +177,31 @@ func testParsingInfixExpressions() {
         testIntegerLiteral(infixExpr.right, rightValue)
     }
 }
+
+@Test
+func testOperatorPrecedenceParsing() {
+    let tests = [
+        ("-a * b", "((-a) * b)"),
+        ("!-a", "(!(-a))"),
+        ("a + b + c", "((a + b) + c)"),
+        ("a + b - c", "((a + b) - c)"),
+        ("a * b * c", "((a * b) * c)"),
+        ("a * b / c", "((a * b) / c)"),
+        ("a + b / c", "(a + (b / c))"),
+        ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+        ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))")
+    ]
+
+    for ((input, expected) in tests) {
+        let lexer = Lexer.create(input)
+        let parser = Parser.create(lexer)
+        let program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        let actual = program.string()
+        @Expect(actual, expected)
+    }
+}
