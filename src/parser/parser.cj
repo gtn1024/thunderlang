@@ -48,6 +48,7 @@ public class Parser {
         this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression)
         this.registerPrefix(TokenType.TRUE, this.parseBoolean)
         this.registerPrefix(TokenType.FALSE, this.parseBoolean)
+        this.registerPrefix(TokenType.LPAREN, this.parseGroupedExpression)
 
         this.registerInfix(TokenType.PLUS, this.parseInfixExpression)
         this.registerInfix(TokenType.MINUS, this.parseInfixExpression)
@@ -185,6 +186,15 @@ public class Parser {
 
     private func parseBoolean(): ?Expression {
         Boolean(this.curToken, this.curTokenIs(TokenType.TRUE))
+    }
+
+    private func parseGroupedExpression(): ?Expression {
+        this.nextToken()
+        let exp = this.parseExpression(LOWEST)
+        if (!this.expectPeek(TokenType.RPAREN)) {
+            return None
+        }
+        exp
     }
 
     private func parseInfixExpression(left: Expression): ?Expression {
