@@ -46,6 +46,8 @@ public class Parser {
 
         this.registerPrefix(TokenType.BANG, this.parsePrefixExpression)
         this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression)
+        this.registerPrefix(TokenType.TRUE, this.parseBoolean)
+        this.registerPrefix(TokenType.FALSE, this.parseBoolean)
 
         this.registerInfix(TokenType.PLUS, this.parseInfixExpression)
         this.registerInfix(TokenType.MINUS, this.parseInfixExpression)
@@ -179,6 +181,10 @@ public class Parser {
         let msg = "could not parse prefix expression with token ${curToken.literal}"
         this.errors.add(msg)
         None
+    }
+
+    private func parseBoolean(): ?Expression {
+        Boolean(this.curToken, this.curTokenIs(TokenType.TRUE))
     }
 
     private func parseInfixExpression(left: Expression): ?Expression {

@@ -93,9 +93,7 @@ func testIdentifierExpression() {
 
     let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
     let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
-    let ident = (expr as Identifier).getOrThrow {=> IllegalStateException("exprStmt.expression is not Identifier")}
-    @Expect(ident.value, "foobar")
-    @Expect(ident.tokenLiteral(), "foobar")
+    testIdentifier(expr, "foobar")
 }
 
 @Test
@@ -111,17 +109,16 @@ func testIntegerLiteralExpression() {
 
     let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
     let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
-
-    let intLit = (expr as IntegerLiteral).getOrThrow {=> IllegalStateException("exprStmt.expression is not IntegerLiteral")}
-    @Expect(intLit.value, 5)
-    @Expect(intLit.tokenLiteral(), "5")
+    testLiteralExpression(expr, 5)
 }
 
 @Test
 func testParsingPrefixExpressions() {
-    let prefixTests = [
+    let prefixTests: Array<(String, String, Any)> = [
         ("!5;", "!", 5),
-        ("-15;", "-", 15)
+        ("-15;", "-", 15),
+        ("!true;", "!", true),
+        ("!false;", "!", false)
     ]
 
     for ((input, `operator`, value) in prefixTests) {
@@ -134,22 +131,20 @@ func testParsingPrefixExpressions() {
 
         let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
         let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
-
-        let prefixExpr = (expr as PrefixExpression).getOrThrow {=> IllegalStateException("exprStmt.expression is not PrefixExpression")}
-        @Expect(prefixExpr.`operator`, `operator`)
-        testIntegerLiteral(prefixExpr.right, value)
+        testPrefixExpression(expr, `operator`, value)
     }
 }
 
-func testIntegerLiteral(il: Expression, value: Int64) {
+func testIntegerLiteral(il: Expression, value: Int64): Bool {
     let integ = (il as IntegerLiteral).getOrThrow {=> IllegalStateException("il is not IntegerLiteral")}
     @Expect(integ.value, value)
     @Expect(integ.tokenLiteral(), value.toString())
+    true
 }
 
 @Test
 func testParsingInfixExpressions() {
-    let infixTests = [
+    let infixTests: Array<(String, Any, String, Any)> = [
         ("5 + 5;", 5, "+", 5),
         ("5 - 5;", 5, "-", 5),
         ("5 * 5;", 5, "*", 5),
@@ -157,7 +152,10 @@ func testParsingInfixExpressions() {
         ("5 > 5;", 5, ">", 5),
         ("5 < 5;", 5, "<", 5),
         ("5 == 5;", 5, "==", 5),
-        ("5 != 5;", 5, "!=", 5)
+        ("5 != 5;", 5, "!=", 5),
+        ("true == true", true, "==", true),
+        ("true != false", true, "!=", false),
+        ("false == false", false, "==", false)
     ]
 
     for ((input, leftValue, `operator`, rightValue) in infixTests) {
@@ -170,17 +168,17 @@ func testParsingInfixExpressions() {
 
         let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
         let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
-
-        let infixExpr = (expr as InfixExpression).getOrThrow {=> IllegalStateException("exprStmt.expression is not InfixExpression")}
-        testIntegerLiteral(infixExpr.left, leftValue)
-        @Expect(infixExpr.`operator`, `operator`)
-        testIntegerLiteral(infixExpr.right, rightValue)
+        testInfixExpression(expr, leftValue, `operator`, rightValue)
     }
 }
 
 @Test
 func testOperatorPrecedenceParsing() {
     let tests = [
+        ("true", "true"),
+        ("false", "false"),
+        ("3 > 5 == false", "((3 > 5) == false)"),
+        ("3 < 5 == true", "((3 < 5) == true)"),
         ("-a * b", "((-a) * b)"),
         ("!-a", "(!(-a))"),
         ("a + b + c", "((a + b) + c)"),
@@ -203,5 +201,64 @@ func testOperatorPrecedenceParsing() {
 
         let actual = program.string()
         @Expect(actual, expected)
+    }
+}
+
+func testLiteralExpression(expression: Expression, expected: Any): Bool {
+    match (expected) {
+        case i: Int64 => return testIntegerLiteral(expression, i)
+        case s: String => return testIdentifier(expression, s)
+        case b: Bool => return testBooleanLiteral(expression, b)
+        case _ => throw IllegalStateException("expression is not IntegerLiteral")
+    }
+    true
+}
+
+func testIdentifier(expression: Expression, value: String): Bool {
+    let ident = (expression as Identifier).getOrThrow {=> IllegalStateException("expression is not Identifier")}
+    @Expect(ident.value, value)
+    @Expect(ident.tokenLiteral(), value)
+    true
+}
+
+func testBooleanLiteral(expression: Expression, value: Bool): Bool {
+    let bo = (expression as Boolean).getOrThrow {=> IllegalStateException("expression is not BooleanLiteral")}
+    @Expect(bo.value, value)
+    @Expect(bo.tokenLiteral(), value.toString())
+    true
+}
+
+func testPrefixExpression(expression: Expression, `operator`: String, value: Any): Bool {
+    let opExp = (expression as PrefixExpression).getOrThrow {=> IllegalStateException("expression is not PrefixExpression")}
+    @Expect(opExp.`operator`, `operator`)
+    testLiteralExpression(opExp.right, value)
+    true
+}
+
+func testInfixExpression(expression: Expression, leftValue: Any, `operator`: String, rightValue: Any): Bool {
+    let infixExp = (expression as InfixExpression).getOrThrow {=> IllegalStateException("expression is not InfixExpression")}
+    testLiteralExpression(infixExp.left, leftValue)
+    @Expect(infixExp.`operator`, `operator`)
+    testLiteralExpression(infixExp.right, rightValue)
+    true
+}
+
+func testBooleanExpression() {
+    let booleanTests = [
+        ("true;", true),
+        ("false;", false)
+    ]
+
+    for ((input, expected) in booleanTests) {
+        let lexer = Lexer.create(input)
+        let parser = Parser.create(lexer)
+        let program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        @Expect(program.statements.size, 1)
+
+        let exprStmt = (program.statements[0] as ExpressionStatement).getOrThrow {=> IllegalStateException("program.statements[0] is not ExpressionStatement")}
+        let expr = exprStmt.expression.getOrThrow {=> IllegalStateException("exprStmt.expression is None")}
+        testBooleanLiteral(expr, expected)
     }
 }

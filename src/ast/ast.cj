@@ -211,3 +211,22 @@ public struct InfixExpression <: Expression {
         sb.toString()
     }
 }
+
+public struct Boolean <: Expression {
+    public Boolean(
+        public let token: Token,
+        public let value: Bool
+    ) {
+    }
+
+    public func tokenLiteral(): String {
+        this.token.literal
+    }
+
+    public func expressionNode(): Unit {
+    }
+
+    public func string(): String {
+        this.token.literal
+    }
+}
